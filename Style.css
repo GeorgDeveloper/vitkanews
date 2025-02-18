@@ -134,8 +134,10 @@ body {
 .main-article__image-container {
     position: relative;
     grid-column: span 3;
+    overflow: hidden;
     min-height: 185px;
     max-height: 344px;
+
 }
 
 .main-article__content {
