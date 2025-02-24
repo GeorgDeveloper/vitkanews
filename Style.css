@@ -6,7 +6,8 @@
     --color-grey: #868686;
     --color-white: #ffffff;
 
-    --grid-column-width: 101px;
+    --container-width: 1440px;
+    --grid-column-width: 98px;
     --grid-gap: 20px;
 }
 
@@ -29,8 +30,9 @@ body {
 }
 
 .container {
-    max-width: 1435px;
+    max-width: var(--container-width);
     margin: 0 auto;
+    padding: 0 20px;
 }
 
 .header {
@@ -213,6 +215,7 @@ body {
     padding-top: 22px;
     padding-bottom: 56px;
     background-color: var(--color-primary);
+    min-width: var(--container-width);
 }
 
 .footer__column {
