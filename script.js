@@ -183,9 +183,23 @@
 //         "category_id": 5
 //     }]
 // }
-let data = null
 
 
+const categoryIds = {
+    index: 0,
+    fashion: 2,
+    tech: 1,
+    politics: 6,
+    sport: 5
+}
+
+const categoryNames = {
+    index: 'Главная',
+    fashion: 'Мода',
+    tech: 'Технологии',
+    politics: 'Политика',
+    sport: 'Спорт'
+}
 // Экранирование символов
 const escapeString = (string) => {
     const tagsToReplace = {
@@ -197,42 +211,6 @@ const escapeString = (string) => {
     return string.replace(/[&<>]/g, function (tag) {
         return tagsToReplace[tag] || tag;
     });
-}
-
-const createMainNewsItem = (item) => {
-    return ` 
-                 <article class="main-article">
-                    <div class="main-article__image-container">
-                        <img class="main-article__image" src="${encodeURI(item.image)}" alt="Фото новости">
-                    </div>
-                    <div class="main-article__content">
-                        <span class="article-category main-article__category">${escapeString(data.categories.find(({id}) => item.category_id === id).name)}</span>
-                        <h2 class="main-article__title">
-                            ${escapeString(item.title)}
-                        </h2>
-                        <p class="main-article__text">
-                           ${escapeString(item.description)}
-                        </p>
-                        <span class="article-source main-article__source">${escapeString(data.sources.find(({id}) => item.source_id === id).name)}</span>
-                    </div>
-                </article>
-`;
-}
-
-const createSmallNewsItem = (item) => {
-    return ` 
-                 <article class="small-article">
-                    <h2 class="small-article__title">${escapeString(item.title)}
-                    </h2>
-                    <p class="small-article__caption">
-                        <span class="article-date small-article__date">${escapeString(data.sources.find(({id}) => item.source_id === id).name)}</span>
-                        <span class="article-source small-article__source">${escapeString(new Date(item.date).toLocaleDateString('ru-RU', {
-        month: 'long',
-        day: 'numeric'
-    }))}</span>
-                    </p>
-                </article>
-`;
 }
 
 
@@ -262,3 +240,120 @@ const renderNews = (categoryId) => {
         })
 
 }
+
+const {createRoot} = ReactDOM; // Получаем createRoot из глобальной области видимости ReactDOM
+
+const App = () => {
+    const [category, setCategory] = React.useState('index');
+    const [articles, setArtycles] = React.useState({items: [], categories: [], sources: []});
+
+    const onNavClick = (e) => {
+        e.preventDefault();
+        setCategory(e.currentTarget.dataset.href);
+    }
+
+    React.useEffect(() => {
+        fetch('https://frontend.karpovcourses.net/api/v2/ru/news/' + categoryIds[category] || '')
+            .then(response => response.json())
+            .then((response) => {
+                setArtycles(response);
+            })
+    }, [category]);
+
+    return (
+        <React.Fragment>
+            <header className="header">
+                <div className="container header__navigation">
+                    <nav className="navigation grid">
+                        <a href="./index.html" className="navigation__logo">
+                            <img className="navigation__image" src="images/logo.svg" alt="Логотип"/></a>
+                        <ul className="navigation__list">
+                            {['index', 'fashion', 'tech', 'politics', 'sport'].map((item) => {
+                                return (<li className="navigation__item" key={item}>
+                                    <a onClick={onNavClick}
+                                       data-href={item}
+                                       className={`navigation__link ${category === item ? 'navigation__link--active' : ''}`}>{categoryNames[item]}</a>
+                                </li>)
+                            })}
+                        </ul>
+                    </nav>
+                </div>
+            </header>
+            <main className="main">
+                <section className="articles">
+                    <div className="container grid">
+                        <section className="articles__big-column">
+                            {articles.items.slice(0, 3).map((item) => {
+                                return (
+                                    <article className="main-article" key={item.title}>
+                                        <div className="main-article__image-container">
+                                            <img className="main-article__image" src={item.image} alt="Фото новости"/>
+                                        </div>
+                                        <div className="main-article__content">
+                                            <span
+                                                className="article-category main-article__category">{articles.categories.find(({id}) => item.category_id === id).name}</span>
+                                            <h2 className="main-article__title">
+                                                {item.title}
+                                            </h2>
+                                            <p className="main-article__text">
+                                                {item.description}
+                                            </p>
+                                            <span
+                                                className="article-source main-article__source">{articles.sources.find(({id}) => item.source_id === id).name}</span>
+                                        </div>
+                                    </article>
+                                )
+                            })}
+                        </section>
+                        <section className="articles__small-column">
+                            {articles.items.slice(4, 12).map((item) => {
+                                return (
+                                    <article className="small-article">
+                                        <h2 className="small-article__title">{item.title}
+                                        </h2>
+                                        <p className="small-article__caption">
+                                            <span
+                                                className="article-date small-article__date">{articles.sources.find(({id}) => item.source_id === id).name}</span>
+                                            <span
+                                                className="article-source small-article__source">{new Date(item.date).toLocaleDateString('ru-RU', {
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}</span>
+                                        </p>
+                                    </article>
+                                )
+                            })}
+                        </section>
+                    </div>
+                </section>
+            </main>
+            <footer className="footer">
+                <div className="container">
+                    <nav className="navigation grid footer__navigation">
+                        <a href="#" className="navigation__logo">
+                            <img className="navigation__image" src="images/logo.svg" alt="Логоотип"/></a>
+                        <ul className="navigation__list">
+                            {['index', 'fashion', 'tech', 'politics', 'sport'].map((item) => {
+                                return (<li className="navigation__item" key={item}>
+                                    <a onClick={onNavClick}
+                                       data-href={item}
+                                       className={`navigation__link ${category === item ? 'navigation__link--active' : ''}`}>{categoryNames[item]}</a>
+                                </li>)
+                            })}
+                        </ul>
+                    </nav>
+                    <div className="footer__column">
+                        <p className="footer__text">Сделано на Frontend курсе в <a href="#"
+                                                                                   className="footer__link">Karpov.Courses</a>
+                        </p>
+                        <p className="footer__copyright">@ 2025</p>
+                    </div>
+                </div>
+            </footer>
+        </React.Fragment>
+    )
+}
+
+const rootElement = document.getElementById('root');
+const root = createRoot(rootElement);
+root.render(<App/>);
