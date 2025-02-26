@@ -201,47 +201,109 @@ const categoryNames = {
     sport: 'Спорт'
 }
 // Экранирование символов
-const escapeString = (string) => {
-    const tagsToReplace = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;'
-    };
+// const escapeString = (string) => {
+//     const tagsToReplace = {
+//         '&': '&amp;',
+//         '<': '&lt;',
+//         '>': '&gt;'
+//     };
+//
+//     return string.replace(/[&<>]/g, function (tag) {
+//         return tagsToReplace[tag] || tag;
+//     });
+// }
 
-    return string.replace(/[&<>]/g, function (tag) {
-        return tagsToReplace[tag] || tag;
-    });
-}
 
-
-const renderNews = (categoryId) => {
-    fetch('https://frontend.karpovcourses.net/api/v2/ru/news/' + (categoryId ? categoryId : ''))
-        .then(response => response.json())
-        .then((responseData) => {
-            data = responseData;
-            const mainNews = data.items.slice(1, 4);
-            const mainNewsContainer = document.querySelector('.articles__big-column');
-
-            mainNews.forEach((item) => {
-                const template = document.createElement('template');
-                template.innerHTML = createMainNewsItem(item);
-                mainNewsContainer.appendChild(template.content);
-            })
-
-            const smallNews = data.items.slice(4, 13);
-            const smallNewsContainer = document.querySelector('.articles__small-column');
-
-            smallNews.forEach((item) => {
-                const template = document.createElement('template');
-                template.innerHTML = createSmallNewsItem(item);
-                smallNewsContainer.appendChild(template.content);
-            })
-
-        })
-
-}
+// const renderNews = (categoryId) => {
+//     fetch('https://frontend.karpovcourses.net/api/v2/ru/news/' + (categoryId ? categoryId : ''))
+//         .then(response => response.json())
+//         .then((responseData) => {
+//             data = responseData;
+//             const mainNews = data.items.slice(1, 4);
+//             const mainNewsContainer = document.querySelector('.articles__big-column');
+//
+//             mainNews.forEach((item) => {
+//                 const template = document.createElement('template');
+//                 template.innerHTML = createMainNewsItem(item);
+//                 mainNewsContainer.appendChild(template.content);
+//             })
+//
+//             const smallNews = data.items.slice(4, 13);
+//             const smallNewsContainer = document.querySelector('.articles__small-column');
+//
+//             smallNews.forEach((item) => {
+//                 const template = document.createElement('template');
+//                 template.innerHTML = createSmallNewsItem(item);
+//                 smallNewsContainer.appendChild(template.content);
+//             })
+//
+//         })
+// }
 
 const {createRoot} = ReactDOM; // Получаем createRoot из глобальной области видимости ReactDOM
+const Navigation = ({onNavClick, currentCategory, className = ''}) => {
+    return (
+        <nav className={`navigation grid ${className}`}>
+            <a data-href="index" className="navigation__logo" onClick={onNavClick}>
+                <img className="navigation__image" src="images/logo.svg" alt="Логотип"/></a>
+            <ul className="navigation__list">
+                {['index', 'fashion', 'tech', 'politics', 'sport'].map((item) => {
+                    return (<li className="navigation__item" key={item}>
+                        <a onClick={onNavClick}
+                           className={`navigation__link ${currentCategory === item ? 'navigation__link--active' : ''}`}
+                           data-href={item}
+                           href="#"
+                        >{categoryNames[item]}
+
+                        </a>
+                    </li>)
+                })}
+            </ul>
+        </nav>
+    )
+}
+
+const MainArticle = ({title, image, category, description, source}) => {
+    return (
+        <article className="main-article">
+            <div className="main-article__image-container">
+                <img className="main-article__image" src={image} alt="Фото новости"/>
+            </div>
+            <div className="main-article__content">
+                                            <span
+                                                className="article-category main-article__category">
+                                                {category}</span>
+                <h2 className="main-article__title">
+                    {title}
+                </h2>
+                <p className="main-article__text">
+                    {description}
+                </p>
+                <span
+                    className="article-source main-article__source">
+                    {source}</span>
+            </div>
+        </article>
+    )
+}
+
+const SmallArticle = ({title, date, source}) => {
+    return (
+        <article className="small-article">
+            <h2 className="small-article__title">{title}
+            </h2>
+            <p className="small-article__caption">
+                                            <span
+                                                className="article-date small-article__date">{source}</span>
+                <span
+                    className="article-source small-article__source">{new Date(date).toLocaleDateString('ru-RU', {
+                    month: 'long',
+                    day: 'numeric'
+                })}</span>
+            </p>
+        </article>
+    )
+}
 
 const App = () => {
     const [category, setCategory] = React.useState('index');
@@ -264,19 +326,11 @@ const App = () => {
         <React.Fragment>
             <header className="header">
                 <div className="container header__navigation">
-                    <nav className="navigation grid">
-                        <a href="./index.html" className="navigation__logo">
-                            <img className="navigation__image" src="images/logo.svg" alt="Логотип"/></a>
-                        <ul className="navigation__list">
-                            {['index', 'fashion', 'tech', 'politics', 'sport'].map((item) => {
-                                return (<li className="navigation__item" key={item}>
-                                    <a onClick={onNavClick}
-                                       data-href={item}
-                                       className={`navigation__link ${category === item ? 'navigation__link--active' : ''}`}>{categoryNames[item]}</a>
-                                </li>)
-                            })}
-                        </ul>
-                    </nav>
+                    <Navigation
+                        onNavClick={onNavClick}
+                        currentCategory={category}
+                        className="header__navigation"
+                    />
                 </div>
             </header>
             <main className="main">
@@ -285,42 +339,26 @@ const App = () => {
                         <section className="articles__big-column">
                             {articles.items.slice(0, 3).map((item) => {
                                 return (
-                                    <article className="main-article" key={item.title}>
-                                        <div className="main-article__image-container">
-                                            <img className="main-article__image" src={item.image} alt="Фото новости"/>
-                                        </div>
-                                        <div className="main-article__content">
-                                            <span
-                                                className="article-category main-article__category">{articles.categories.find(({id}) => item.category_id === id).name}</span>
-                                            <h2 className="main-article__title">
-                                                {item.title}
-                                            </h2>
-                                            <p className="main-article__text">
-                                                {item.description}
-                                            </p>
-                                            <span
-                                                className="article-source main-article__source">{articles.sources.find(({id}) => item.source_id === id).name}</span>
-                                        </div>
-                                    </article>
+                                    <MainArticle
+                                        key={item.title}
+                                        title={item.title}
+                                        image={item.image}
+                                        category={articles.sources.find(({id}) => item.source_id === id).name}
+                                        description={item.description}
+                                        source={articles.sources.find(({id}) => item.source_id === id).name}
+                                    />
                                 )
                             })}
                         </section>
                         <section className="articles__small-column">
                             {articles.items.slice(4, 12).map((item) => {
                                 return (
-                                    <article className="small-article">
-                                        <h2 className="small-article__title">{item.title}
-                                        </h2>
-                                        <p className="small-article__caption">
-                                            <span
-                                                className="article-date small-article__date">{articles.sources.find(({id}) => item.source_id === id).name}</span>
-                                            <span
-                                                className="article-source small-article__source">{new Date(item.date).toLocaleDateString('ru-RU', {
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}</span>
-                                        </p>
-                                    </article>
+                                    <SmallArticle
+                                        key={item.title}
+                                        title={item.title}
+                                        source={articles.sources.find(({id}) => item.source_id === id).name}
+                                        date={item.date}
+                                    />
                                 )
                             })}
                         </section>
@@ -329,19 +367,11 @@ const App = () => {
             </main>
             <footer className="footer">
                 <div className="container">
-                    <nav className="navigation grid footer__navigation">
-                        <a href="#" className="navigation__logo">
-                            <img className="navigation__image" src="images/logo.svg" alt="Логоотип"/></a>
-                        <ul className="navigation__list">
-                            {['index', 'fashion', 'tech', 'politics', 'sport'].map((item) => {
-                                return (<li className="navigation__item" key={item}>
-                                    <a onClick={onNavClick}
-                                       data-href={item}
-                                       className={`navigation__link ${category === item ? 'navigation__link--active' : ''}`}>{categoryNames[item]}</a>
-                                </li>)
-                            })}
-                        </ul>
-                    </nav>
+                    <Navigation
+                        onNavClick={onNavClick}
+                        currentCategory={category}
+                        className="footer__navigation"
+                    />
                     <div className="footer__column">
                         <p className="footer__text">Сделано на Frontend курсе в <a href="#"
                                                                                    className="footer__link">Karpov.Courses</a>
@@ -356,4 +386,6 @@ const App = () => {
 
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
-root.render(<App/>);
+root.render(
+    <App/>
+);
